@@ -7,6 +7,38 @@ public class CommentInMemoryRepository : ICommentRepository
 {
     private readonly List<Comment> comments = new();
 
+    public CommentInMemoryRepository()
+    {
+        SeedData();
+    }
+
+    private void SeedData()
+    {
+        comments.Add(new Comment
+        {
+            Id = 1,
+            Body = "Great post!",
+            UserId = 2,
+            PostId = 1
+        });
+
+        comments.Add(new Comment
+        {
+            Id = 2,
+            Body = "Thanks for sharing!",
+            UserId = 1,
+            PostId = 2
+        });
+
+        comments.Add(new Comment
+        {
+            Id = 3,
+            Body = "I completely agree with this.",
+            UserId = 2,
+            PostId = 2
+        });
+    }
+
     public Task<Comment> AddAsync(Comment comment)
     {
         comment.Id = comments.Any()

@@ -7,6 +7,35 @@ public class UserInMemoryRepository : IUserRepository
 {
     private readonly List<User> users = new();
 
+    public UserInMemoryRepository()
+    {
+        SeedData();
+    }
+
+    private void SeedData()
+    {
+        users.Add(new User
+        {
+            Id = 1,
+            Username = "Alice",
+            Password = "password123"
+        });
+
+        users.Add(new User
+        {
+            Id = 2,
+            Username = "Bob",
+            Password = "password456"
+        });
+
+        users.Add(new User
+        {
+            Id = 3,
+            Username = "Charlie",
+            Password = "password789"
+        });
+    }
+
     public Task<User> AddAsync(User user)
     {
         user.Id = users.Any()
