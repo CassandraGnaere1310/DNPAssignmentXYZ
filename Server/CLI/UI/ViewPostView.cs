@@ -16,13 +16,8 @@ public class ViewPostView
         this.commentRepository = commentRepository;
     }
 
-    public async Task ShowPostAsync()
+    public async Task ShowPostAsync(int postId)
     {
-        Console.Write("Enter post ID: ");
-
-        int postId = int.Parse(
-            Console.ReadLine() ?? "0");
-
         Post post =
             await postRepository.GetSingleAsync(postId);
 

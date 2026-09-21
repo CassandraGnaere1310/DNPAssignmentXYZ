@@ -30,7 +30,6 @@ public class CliApp
             Console.WriteLine("2. Create post");
             Console.WriteLine("3. Add comment");
             Console.WriteLine("4. View posts");
-            Console.WriteLine("5. View specific post");
             Console.WriteLine("0. Exit");
             Console.Write("Choose an option: ");
 
@@ -42,14 +41,14 @@ public class CliApp
                     CreateUserView createUserView =
                         new CreateUserView(userRepository);
 
-                    await createUserView.CreateUserAsync();
+                    await createUserView.ShowAsync();
                     break;
 
                 case "2":
                     CreatePostView createPostView =
                         new CreatePostView(postRepository);
 
-                    await createPostView.CreatePostAsync();
+                    await createPostView.ShowAsync();
                     break;
 
                 case "3":
@@ -60,16 +59,13 @@ public class CliApp
                     break;
 
                 case "4":
-                    Console.WriteLine("You selected: View posts");
-
                     ListPostsView listPostsView =
-                        new ListPostsView(postRepository);
+                        new ListPostsView(
+                            postRepository,
+                            commentRepository,
+                            userRepository);
 
-                    listPostsView.ShowPosts();
-
-                    Console.WriteLine();
-                    Console.WriteLine("Press Enter to return to the menu...");
-                    Console.ReadLine();
+                    await listPostsView.ShowAsync();
                     break;
 
                 case "0":
@@ -78,7 +74,8 @@ public class CliApp
                     break;
 
                 default:
-                    Console.WriteLine("Invalid option.");
+                    Console.WriteLine(
+                        "Invalid option, please try again.");
                     break;
             }
         }
