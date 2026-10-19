@@ -1,6 +1,55 @@
-@WebAPI_HostAddress = http://localhost:5107
+### Opret en testbruger
+POST http://localhost:5107/users
+Content-Type: application/json
 
-GET {{WebAPI_HostAddress}}/weatherforecast/
-Accept: application/json
+{
+  "username": "CassandraTest",
+  "password": "test123"
+}
 
-###
+### Hent alle brugere
+GET http://localhost:5107/users
+
+### Filtrer brugere på brugernavn
+GET http://localhost:5107/users?username=cas
+
+### Opret et opslag
+POST http://localhost:5107/posts
+Content-Type: application/json
+
+{
+  "title": "Mit første opslag",
+  "body": "Jeg tester mit Web API.",
+  "userId": 1
+}
+
+### Hent alle opslag
+GET http://localhost:5107/posts
+
+### Filtrer opslag på titel
+GET http://localhost:5107/posts?title=første
+
+### Filtrer opslag på bruger
+GET http://localhost:5107/posts?userId=1
+
+### Opret en kommentar
+POST http://localhost:5107/comments
+Content-Type: application/json
+
+{
+  "body": "Min første kommentar!",
+  "userId": 1,
+  "postId": 1
+}
+
+### Hent alle kommentarer
+GET http://localhost:5107/comments
+
+### Filtrer kommentarer på bruger
+GET http://localhost:5107/comments?userId=1
+
+### Filtrer kommentarer på opslag
+GET http://localhost:5107/comments?postId=1
+
+### Filtrer kommentarer på både bruger og opslag
+GET http://localhost:5107/comments?userId=1&postId=1
