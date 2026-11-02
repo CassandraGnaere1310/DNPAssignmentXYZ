@@ -1,8 +1,12 @@
 ﻿@page "/create-post"
+@attribute [Authorize]
 @using ApiContracts
 @using BlazorApp.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IPostService PostService
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthProvider
 
 <PageTitle>Create post</PageTitle>
 
@@ -59,11 +63,30 @@
 
         try
         {
+            AuthenticationState authState =
+                await AuthProvider.GetAuthenticationStateAsync();
+
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                errorMessage = "Please log in to create a post.";
+                return;
+            }
+
+            string? idClaim = user.FindFirst("Id")?.Value;
+
+            if (!int.TryParse(idClaim, out int userId))
+            {
+                errorMessage = "Could not find your user ID. Please log in again.";
+                return;
+            }
+
             CreatePostDto request = new()
             {
                 Title = title.Trim(),
                 Body = body.Trim(),
-                UserId = 1
+                UserId = userId
             };
 
             PostDto post = await PostService.AddPostAsync(request);

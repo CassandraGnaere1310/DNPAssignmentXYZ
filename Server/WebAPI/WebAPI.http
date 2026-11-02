@@ -53,3 +53,21 @@ GET http://localhost:5107/comments?postId=1
 
 ### Filtrer kommentarer på både bruger og opslag
 GET http://localhost:5107/comments?userId=1&postId=1
+
+### Login med korrekt adgangskode
+POST http://localhost:5107/auth/login
+Content-Type: application/json
+
+{
+  "userName": "CassandraTest",
+  "password": "test123"
+}
+
+### Login med forkert adgangskode
+POST http://localhost:5107/auth/login
+Content-Type: application/json
+
+{
+  "userName": "CassandraTest",
+  "password": "forkert"
+}

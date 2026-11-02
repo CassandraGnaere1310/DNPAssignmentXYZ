@@ -1,9 +1,11 @@
 ﻿@page "/posts/{Id:int}"
 @using ApiContracts
 @using BlazorApp.Services
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IPostService PostService
 @inject IUserService UserService
 @inject ICommentService CommentService
+@inject AuthenticationStateProvider AuthProvider
 
 <PageTitle>Post details</PageTitle>
 
@@ -46,32 +48,45 @@ else
         }
     }
 
-    <h4>Add a comment</h4>
+    <AuthorizeView>
+        <Authorized>
+            <h4>Add a comment</h4>
 
-    <div class="mb-3">
-        <label for="commentBody" class="form-label">Comment</label>
-        <textarea id="commentBody"
-                  class="form-control"
-                  rows="3"
-                  @bind="commentBody"
-                  disabled="@isSubmitting"></textarea>
-    </div>
+            <div class="mb-3">
+                <label for="commentBody" class="form-label">
+                    Comment
+                </label>
+                <textarea id="commentBody"
+                          class="form-control"
+                          rows="3"
+                          @bind="commentBody"
+                          disabled="@isSubmitting"></textarea>
+            </div>
 
-    <button class="btn btn-primary"
-            @onclick="AddCommentAsync"
-            disabled="@isSubmitting">
-        @(isSubmitting ? "Adding..." : "Add comment")
-    </button>
+            <button class="btn btn-primary"
+                    @onclick="AddCommentAsync"
+                    disabled="@isSubmitting">
+                @(isSubmitting ? "Adding..." : "Add comment")
+            </button>
 
-    @if (!string.IsNullOrEmpty(commentError))
-    {
-        <p class="text-danger mt-3">@commentError</p>
-    }
+            @if (!string.IsNullOrEmpty(commentError))
+            {
+                <p class="text-danger mt-3">@commentError</p>
+            }
 
-    @if (!string.IsNullOrEmpty(successMessage))
-    {
-        <p class="text-success mt-3">@successMessage</p>
-    }
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <p class="text-success mt-3">@successMessage</p>
+            }
+        </Authorized>
+
+        <NotAuthorized>
+            <p>
+                <NavLink href="login">Log in</NavLink>
+                to add a comment.
+            </p>
+        </NotAuthorized>
+    </AuthorizeView>
 }
 
 @code {
@@ -116,6 +131,11 @@ else
 
     private async Task AddCommentAsync()
     {
+        if (isSubmitting)
+        {
+            return;
+        }
+
         commentError = null;
         successMessage = null;
 
@@ -129,10 +149,30 @@ else
 
         try
         {
+            AuthenticationState authState =
+                await AuthProvider.GetAuthenticationStateAsync();
+
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                commentError = "Please log in to add a comment.";
+                return;
+            }
+
+            string? idClaim = user.FindFirst("Id")?.Value;
+
+            if (!int.TryParse(idClaim, out int userId))
+            {
+                commentError =
+                    "Could not find your user ID. Please log in again.";
+                return;
+            }
+
             CreateCommentDto request = new()
             {
                 Body = commentBody.Trim(),
-                UserId = 1,
+                UserId = userId,
                 PostId = Id
             };
 
