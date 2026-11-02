@@ -1,0 +1,156 @@
+﻿@page "/posts/{Id:int}"
+@using ApiContracts
+@using BlazorApp.Services
+@inject IPostService PostService
+@inject IUserService UserService
+@inject ICommentService CommentService
+
+<PageTitle>Post details</PageTitle>
+
+<a href="/posts">Back to posts</a>
+
+@if (!string.IsNullOrEmpty(loadError))
+{
+    <p class="text-danger mt-3">@loadError</p>
+}
+else if (post is null)
+{
+    <p>Loading post...</p>
+}
+else
+{
+    <h3 class="mt-3">@post.Title</h3>
+
+    <p class="text-muted">Written by @authorName</p>
+
+    <p style="white-space: pre-wrap;">@post.Body</p>
+
+    <hr />
+
+    <h4>Comments</h4>
+
+    @if (comments.Count == 0)
+    {
+        <p>No comments yet.</p>
+    }
+    else
+    {
+        @foreach (CommentDto comment in comments)
+        {
+            <div class="card mb-3" @key="comment.Id">
+                <div class="card-body">
+                    <p class="card-text"
+                       style="white-space: pre-wrap;">@comment.Body</p>
+                </div>
+            </div>
+        }
+    }
+
+    <h4>Add a comment</h4>
+
+    <div class="mb-3">
+        <label for="commentBody" class="form-label">Comment</label>
+        <textarea id="commentBody"
+                  class="form-control"
+                  rows="3"
+                  @bind="commentBody"
+                  disabled="@isSubmitting"></textarea>
+    </div>
+
+    <button class="btn btn-primary"
+            @onclick="AddCommentAsync"
+            disabled="@isSubmitting">
+        @(isSubmitting ? "Adding..." : "Add comment")
+    </button>
+
+    @if (!string.IsNullOrEmpty(commentError))
+    {
+        <p class="text-danger mt-3">@commentError</p>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <p class="text-success mt-3">@successMessage</p>
+    }
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private PostDto? post;
+    private string authorName = "";
+    private List<CommentDto> comments = new();
+    private string commentBody = "";
+    private string? loadError;
+    private string? commentError;
+    private string? successMessage;
+    private bool isSubmitting;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        post = null;
+        loadError = null;
+        commentError = null;
+        successMessage = null;
+        commentBody = "";
+        comments = new();
+
+        try
+        {
+            PostDto loadedPost = await PostService.GetPostAsync(Id);
+
+            UserDto author =
+                await UserService.GetUserAsync(loadedPost.UserId);
+
+            comments = await CommentService.GetCommentsAsync(Id);
+
+            authorName = author.Username;
+            post = loadedPost;
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
+    }
+
+    private async Task AddCommentAsync()
+    {
+        commentError = null;
+        successMessage = null;
+
+        if (string.IsNullOrWhiteSpace(commentBody))
+        {
+            commentError = "Please enter a comment.";
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            CreateCommentDto request = new()
+            {
+                Body = commentBody.Trim(),
+                UserId = 1,
+                PostId = Id
+            };
+
+            CommentDto createdComment =
+                await CommentService.AddCommentAsync(request);
+
+            comments.Add(createdComment);
+
+            commentBody = "";
+            successMessage = "Comment added.";
+        }
+        catch (Exception ex)
+        {
+            commentError = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

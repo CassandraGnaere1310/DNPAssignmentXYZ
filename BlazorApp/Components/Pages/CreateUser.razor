@@ -1,0 +1,87 @@
+﻿@page "/create-user"
+@using ApiContracts
+@using BlazorApp.Services
+@inject IUserService UserService
+
+<PageTitle>Create user</PageTitle>
+
+<h3>Create user</h3>
+
+<div class="mb-3">
+    <label for="username" class="form-label">Username</label>
+    <input id="username"
+           class="form-control"
+           @bind="username" />
+</div>
+
+<div class="mb-3">
+    <label for="password" class="form-label">Password</label>
+    <input id="password"
+           type="password"
+           class="form-control"
+           @bind="password" />
+</div>
+
+<button class="btn btn-primary"
+        @onclick="CreateUserAsync"
+        disabled="@isSubmitting">
+    @(isSubmitting ? "Creating..." : "Create user")
+</button>
+
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <p class="text-success mt-3">@successMessage</p>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p class="text-danger mt-3">@errorMessage</p>
+}
+
+@code {
+    private string username = "";
+    private string password = "";
+    private string? successMessage;
+    private string? errorMessage;
+    private bool isSubmitting;
+
+    private async Task CreateUserAsync()
+    {
+        successMessage = null;
+        errorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(username) ||
+            string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "Please enter both username and password.";
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            CreateUserDto request = new()
+            {
+                Username = username.Trim(),
+                Password = password
+            };
+
+            UserDto user = await UserService.AddUserAsync(request);
+
+            successMessage =
+                $"User {user.Username} was created with ID {user.Id}.";
+
+            username = "";
+            password = "";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

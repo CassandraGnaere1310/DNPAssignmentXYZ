@@ -1,0 +1,82 @@
+﻿@page "/create-post"
+@using ApiContracts
+@using BlazorApp.Services
+@inject IPostService PostService
+@inject NavigationManager Navigation
+
+<PageTitle>Create post</PageTitle>
+
+<h3>Create post</h3>
+
+<div class="mb-3">
+    <label for="title" class="form-label">Title</label>
+    <input id="title"
+           class="form-control"
+           @bind="title"
+           disabled="@isSubmitting" />
+</div>
+
+<div class="mb-3">
+    <label for="body" class="form-label">Body</label>
+    <textarea id="body"
+              class="form-control"
+              rows="6"
+              @bind="body"
+              disabled="@isSubmitting"></textarea>
+</div>
+
+<button class="btn btn-primary"
+        @onclick="CreatePostAsync"
+        disabled="@isSubmitting">
+    @(isSubmitting ? "Creating..." : "Create post")
+</button>
+
+<a href="/posts" class="btn btn-secondary ms-2">Back to posts</a>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p class="text-danger mt-3">@errorMessage</p>
+}
+
+@code {
+    private string title = "";
+    private string body = "";
+    private string? errorMessage;
+    private bool isSubmitting;
+
+    private async Task CreatePostAsync()
+    {
+        errorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(title) ||
+            string.IsNullOrWhiteSpace(body))
+        {
+            errorMessage = "Please enter both title and body.";
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            CreatePostDto request = new()
+            {
+                Title = title.Trim(),
+                Body = body.Trim(),
+                UserId = 1
+            };
+
+            PostDto post = await PostService.AddPostAsync(request);
+
+            Navigation.NavigateTo($"/posts/{post.Id}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}
